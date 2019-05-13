@@ -20,7 +20,7 @@ ui <- fluidPage(
                          c("png"="png",
                            "jpg"='jpg',
                            "bmp"="bmp",
-                           "svg"="svg")),
+                           "tif"="tiff")),
             
             textOutput("filename"),
             actionButton("save_btn", "Save")
@@ -69,7 +69,6 @@ server <- function(input, output, session) {
     })
     
     output$imga <- renderImage({
-        
         imagefile=file.path("./www",input$image)
         myimage<-image_read(imagefile)
         
@@ -83,11 +82,18 @@ server <- function(input, output, session) {
     observeEvent(input$save_btn, {
         imagefile=file.path("./www",input$image)
         myimage<-image_read(imagefile)
-        
-        image_modulate(myimage,saturation=input$sat, brightness=input$bright, hue=input$hue)
+        newImage<-image_modulate(myimage,saturation=input$sat, brightness=input$bright, hue=input$hue)
+      
         newname<-give_ext(before_last_dot(imagefile), input$myformat)
-        image_write(myimage,path=newname,format=input$myformat)
+        image_write(newImage,path=newname,format=input$myformat)
+        
         output$filename = renderText({newname})
+        file.list<-list.files(path="./www",pattern="*")
+        updateSelectInput(session, inputId='image',label='Image', choices=file.list,
+                    selected=NULL)
+        updateSliderInput(session,"sat",value=100)
+        updateSliderInput(session,"hue",value=100)
+        updateSliderInput(session,"bright",value=100)
     })
       
 }
